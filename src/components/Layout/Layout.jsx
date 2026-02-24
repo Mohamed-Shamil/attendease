@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { 
@@ -15,15 +15,28 @@ import {
   Settings as SettingsIcon,
   ShieldCheck,
   Clock,
-  Mail
+  Mail,
+  Home
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
-  const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [isSidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 1024);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      if (!mobile) setSidebarOpen(true);
+      else setSidebarOpen(false);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const menuItems = [
     { title: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', roles: ['admin', 'headmaster', 'teacher', 'student'] },
@@ -33,171 +46,197 @@ const Layout = ({ children }) => {
     { title: 'Class Management', icon: Users, path: '/class-management', roles: ['admin', 'headmaster'] },
     { title: 'User Management', icon: ShieldCheck, path: '/users', roles: ['admin', 'headmaster'] },
     { title: 'Promotions', icon: TrendingUp, path: '/promotion', roles: ['admin', 'headmaster'] },
-    { title: 'Settings', icon: SettingsIcon, path: '/settings', roles: ['admin', 'headmaster'] },
+    { title: 'Settings', icon: SettingsIcon, path: '/settings', roles: ['admin', 'headmaster', 'teacher', 'student'] },
   ];
 
   const filteredMenu = menuItems.filter(item => item.roles.includes(user.role));
 
-  const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
+  const bottomNavItems = [
+    { title: 'Home', icon: Home, path: '/dashboard' },
+    { title: 'Attend', icon: CalendarCheck, path: '/attendance' },
+    { title: 'Leaves', icon: Mail, path: '/leaves' },
+    { title: 'History', icon: Clock, path: '/history' },
+  ];
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--background)' }}>
-      {/* Mobile Sidebar Overlay */}
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--background)', paddingBottom: isMobile ? '70px' : '0' }}>
+      {/* Sidebar Drawer for Mobile & Desktop */}
       <AnimatePresence>
-        {!isSidebarOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={toggleSidebar}
-            className="mobile-overlay"
-            style={{
-              position: 'fixed',
-              inset: 0,
-              backgroundColor: 'rgba(0,0,0,0.5)',
-              zIndex: 40,
-              display: window.innerWidth < 1024 ? 'block' : 'none'
-            }}
-          />
+        {isSidebarOpen && (
+          <>
+            {/* Overlay for mobile */}
+            {isMobile && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setSidebarOpen(false)}
+                style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 100, backdropFilter: 'blur(4px)' }}
+              />
+            )}
+            
+            <motion.aside
+              initial={isMobile ? { x: -280 } : { width: 0 }}
+              animate={isMobile ? { x: 0 } : { width: 280 }}
+              exit={isMobile ? { x: -280 } : { width: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              style={{
+                backgroundColor: 'white',
+                borderRight: '1px solid var(--border)',
+                position: isMobile ? 'fixed' : 'sticky',
+                top: 0,
+                bottom: 0,
+                left: 0,
+                width: 280,
+                zIndex: 110,
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden'
+              }}
+            >
+              <div style={{ padding: '2rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div className="gradient-blue" style={{ width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                    <CalendarCheck size={20} />
+                  </div>
+                  <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--primary)', letterSpacing: '-0.5px' }}>AttendEase</h2>
+                </div>
+                {isMobile && <button onClick={() => setSidebarOpen(false)} style={{ color: 'var(--text-muted)' }}><X size={20}/></button>}
+              </div>
+
+              <nav style={{ flex: 1, padding: '0.5rem 1rem' }}>
+                {filteredMenu.map((item) => {
+                  const isActive = location.pathname === item.path;
+                  return (
+                    <button
+                      key={item.path}
+                      onClick={() => { navigate(item.path); if(isMobile) setSidebarOpen(false); }}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '1rem',
+                        padding: '0.85rem 1.25rem',
+                        borderRadius: '12px',
+                        backgroundColor: isActive ? 'var(--primary-light)' : 'transparent',
+                        color: isActive ? 'var(--primary)' : 'var(--text-muted)',
+                        marginBottom: '0.4rem',
+                        fontWeight: isActive ? '700' : '500',
+                        textAlign: 'left',
+                        fontSize: '0.95rem'
+                      }}
+                    >
+                      <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+                      <span>{item.title}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+
+              <div style={{ padding: '1.25rem', borderTop: '1px solid var(--border)' }}>
+                <button
+                  onClick={logout}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    padding: '0.85rem 1.25rem',
+                    borderRadius: '12px',
+                    color: 'var(--error)',
+                    fontWeight: '700',
+                    fontSize: '0.95rem'
+                  }}
+                >
+                  <LogOut size={20} />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </motion.aside>
+          </>
         )}
       </AnimatePresence>
 
-      {/* Sidebar */}
-      <motion.aside
-        initial={false}
-        animate={{ width: isSidebarOpen ? '280px' : '0px', opacity: isSidebarOpen ? 1 : 0 }}
-        style={{
-          backgroundColor: 'white',
-          borderRight: '1px solid var(--border)',
-          position: 'fixed',
-          top: 0,
-          bottom: 0,
-          left: 0,
-          zIndex: 50,
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column'
-        }}
-      >
-        <div style={{ padding: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div className="gradient-blue" style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-            <CalendarCheck size={24} style={{ margin: 'auto' }} />
-          </div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--primary)' }}>AttendEase</h2>
-        </div>
-
-        <nav style={{ flex: 1, padding: '1rem' }}>
-          {filteredMenu.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  padding: '1rem 1.5rem',
-                  borderRadius: '12px',
-                  backgroundColor: isActive ? 'var(--primary-light)' : 'transparent',
-                  color: isActive ? 'var(--primary)' : 'var(--text-muted)',
-                  marginBottom: '0.5rem',
-                  fontWeight: isActive ? '600' : '400',
-                  textAlign: 'left'
-                }}
-              >
-                <item.icon size={20} />
-                <span>{item.title}</span>
-              </button>
-            );
-          })}
-        </nav>
-
-        <div style={{ padding: '1.5rem', borderTop: '1px solid var(--border)' }}>
-          <button
-            onClick={() => { logout(); navigate('/login'); }}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '1rem',
-              padding: '1rem 1.5rem',
-              borderRadius: '12px',
-              color: 'var(--error)',
-              fontWeight: '600'
-            }}
-          >
-            <LogOut size={20} />
-            <span>Logout</span>
-          </button>
-        </div>
-      </motion.aside>
-
-      {/* Main Content */}
-      <main style={{ 
-        flex: 1, 
-        marginLeft: isSidebarOpen && window.innerWidth >= 1024 ? '280px' : '0',
-        transition: 'margin-left 0.3s ease'
-      }}>
-        {/* Navbar */}
+      {/* Main Content Area */}
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        {/* Mobile Header */}
         <header style={{
-          height: '80px',
+          height: isMobile ? '64px' : '80px',
           backgroundColor: 'white',
           borderBottom: '1px solid var(--border)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 2rem',
+          padding: isMobile ? '0 1.25rem' : '0 2.5rem',
           position: 'sticky',
           top: 0,
-          zIndex: 30
+          zIndex: 90,
+          backdropFilter: 'blur(10px)',
+          background: 'rgba(255,255,255,0.8)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <button onClick={toggleSidebar} style={{ padding: '0.5rem', borderRadius: '8px', color: 'var(--text-muted)' }}>
-              {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+            <button 
+              onClick={() => setSidebarOpen(true)} 
+              className="mobile-only"
+              style={{ width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', background: 'var(--background)' }}
+            >
+              <Menu size={22} />
             </button>
-            <div className="search-bar" style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '0.5rem', 
-              backgroundColor: 'var(--background)',
-              padding: '0.6rem 1rem',
-              borderRadius: '10px',
-              width: '300px'
-            }}>
-              <Search size={18} color="var(--text-muted)" />
-              <input 
-                type="text" 
-                placeholder="Search anything..." 
-                style={{ border: 'none', background: 'none', outline: 'none', width: '100%', fontSize: '0.9rem' }}
-              />
+            <div className="desktop-only" style={{ visibility: isSidebarOpen ? 'hidden' : 'visible' }}>
+               <button onClick={() => setSidebarOpen(true)} style={{ color: 'var(--text-muted)' }}><Menu size={24}/></button>
             </div>
+            {!isMobile && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', backgroundColor: 'var(--background)', padding: '0.7rem 1.25rem', borderRadius: '14px', width: '350px' }}>
+                <Search size={18} color="var(--text-muted)" />
+                <input type="text" placeholder="Search data..." style={{ border: 'none', background: 'none', outline: 'none', width: '100%', fontSize: '0.9rem', fontWeight: '500' }} />
+              </div>
+            )}
+            {isMobile && <h1 style={{ fontSize: '1.25rem', fontWeight: '800', background: 'linear-gradient(to right, var(--primary), #6366f1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{filteredMenu.find(m => m.path === location.pathname)?.title || 'AttendEase'}</h1>}
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            <button style={{ position: 'relative', color: 'var(--text-muted)' }}>
-              <Bell size={22} />
-              <span style={{ position: 'absolute', top: -4, right: -4, width: '10px', height: '10px', backgroundColor: 'var(--error)', borderRadius: '50%', border: '2px solid white' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <button style={{ width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', background: 'var(--background)', position: 'relative' }}>
+              <Bell size={20} />
+              <span style={{ position: 'absolute', top: 10, right: 10, width: '8px', height: '8px', backgroundColor: 'var(--error)', borderRadius: '50%', border: '2px solid white' }} />
             </button>
             
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', paddingLeft: '1.5rem', borderLeft: '1px solid var(--border)' }}>
-              <div style={{ textAlign: 'right', display: 'none', md: 'block' }}>
-                <p style={{ fontWeight: '600', fontSize: '0.9rem', color: 'var(--text-main)' }}>{user.name}</p>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{user.role}</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', paddingLeft: isMobile ? '0.5rem' : '1.5rem', borderLeft: isMobile ? 'none' : '1px solid var(--border)' }}>
+              <div className="desktop-only" style={{ textAlign: 'right' }}>
+                <p style={{ fontWeight: '700', fontSize: '0.9rem', color: 'var(--text-main)', marginBottom: '-2px' }}>{user.name}</p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>{user.role}</p>
               </div>
-              <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
-                <User size={20} />
+              <div 
+                onClick={() => navigate('/settings')}
+                style={{ width: '40px', height: '40px', borderRadius: '12px', overflow: 'hidden', backgroundColor: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', cursor: 'pointer' }}
+              >
+                <User size={22} />
               </div>
             </div>
           </div>
         </header>
 
-        {/* Page Content */}
-        <div style={{ padding: '2rem' }}>
+        {/* Dynamic Page Content */}
+        <div className="container-padded" style={{ maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
           {children}
         </div>
       </main>
+
+      {/* Flutter-like Bottom Navigation */}
+      <nav className="bottom-nav">
+        {bottomNavItems.map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <button 
+              key={item.path}
+              onClick={() => navigate(item.path)}
+              className={`bottom-nav-item ${isActive ? 'active' : ''}`}
+            >
+              <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} />
+              <span>{item.title}</span>
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 };

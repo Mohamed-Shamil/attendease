@@ -1,169 +1,109 @@
-import React, { useState } from 'react';
-import { Plus, Search, MoreVertical, Edit2, Trash2, Users, UserPlus, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Search, MoreVertical, Edit2, Trash2, Users, UserPlus, X, BookOpen, GraduationCap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ClassManagement = () => {
   const [showModal, setShowModal] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [classes, setClasses] = useState([
-    { id: 1, name: 'Grade 10-A', teacher: 'John Doe', students: 32, attendance: '94%' },
-    { id: 2, name: 'Grade 10-B', teacher: 'Sarah Lee', students: 30, attendance: '92%' },
-    { id: 3, name: 'Grade 9-A', teacher: 'Michael Chen', students: 35, attendance: '95%' },
-    { id: 4, name: 'Grade 9-B', teacher: 'Jane Smith', students: 33, attendance: '91%' },
+    { id: 1, name: 'Grade 10-A', teacher: 'John Doe', students: 32, attendance: '94%', color: '#2563eb' },
+    { id: 2, name: 'Grade 10-B', teacher: 'Sarah Lee', students: 30, attendance: '92%', color: '#10b981' },
+    { id: 3, name: 'Grade 9-A', teacher: 'Michael Chen', students: 35, attendance: '95%', color: '#f59e0b' },
+    { id: 4, name: 'Grade 9-B', teacher: 'Jane Smith', students: 33, attendance: '91%', color: '#ef4444' },
   ]);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const [newClass, setNewClass] = useState({ name: '', teacher: '', students: 0 });
 
   const handleCreateClass = (e) => {
     e.preventDefault();
     const id = Date.now();
-    setClasses([...classes, { ...newClass, id, attendance: '0%' }]);
+    const colors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+    const color = colors[classes.length % colors.length];
+    setClasses([...classes, { ...newClass, id, attendance: '0%', color }]);
     setShowModal(false);
     setNewClass({ name: '', teacher: '', students: 0 });
   };
 
-  const removeClass = (id) => {
-    setClasses(classes.filter(c => c.id !== id));
-  };
+  const removeClass = (id) => setClasses(classes.filter(c => c.id !== id));
+
+  const renderModal = () => (
+    <AnimatePresence>
+      {showModal && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center', zIndex: 1100, backdropFilter: 'blur(4px)' }}>
+          <motion.div initial={isMobile ? { y: 300 } : { opacity: 0, scale: 0.95 }} animate={isMobile ? { y: 0 } : { opacity: 1, scale: 1 }} exit={isMobile ? { y: 300 } : { opacity: 0, scale: 0.95 }} className="card" style={{ width: '100%', maxWidth: '450px', backgroundColor: 'white', position: 'relative', borderRadius: isMobile ? '32px 32px 0 0' : '24px', padding: '2.5rem 1.5rem 1.5rem' }}>
+            {isMobile && <div style={{ width: '40px', height: '4px', backgroundColor: 'var(--border)', borderRadius: '2px', margin: '-1rem auto 1.5rem' }} />}
+            <button onClick={() => setShowModal(false)} style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', background: 'var(--background)', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', borderRadius: '50%', padding: '0.4rem' }}><X size={20} /></button>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '900', marginBottom: '1.5rem' }}>New Class</h2>
+            <form onSubmit={handleCreateClass} style={{ display: 'grid', gap: '1rem' }}>
+              <input required placeholder="Class Name (e.g. Grade 11-A)" value={newClass.name} onChange={e => setNewClass({...newClass, name: e.target.value})} style={{ width: '100%', padding: '1rem', borderRadius: '14px', border: '1px solid var(--border)', fontWeight: '600' }} />
+              <input required placeholder="Assign Teacher" value={newClass.teacher} onChange={e => setNewClass({...newClass, teacher: e.target.value})} style={{ width: '100%', padding: '1rem', borderRadius: '14px', border: '1px solid var(--border)', fontWeight: '600' }} />
+              <input type="number" placeholder="Student Count" value={newClass.students} onChange={e => setNewClass({...newClass, students: parseInt(e.target.value)})} style={{ width: '100%', padding: '1rem', borderRadius: '14px', border: '1px solid var(--border)', fontWeight: '600' }} />
+              <button type="submit" className="btn-primary" style={{ height: '54px', marginTop: '1rem' }}>Save Class</button>
+            </form>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
 
   return (
-    <div className="animate-fade-in">
-      {/* Create Class Modal */}
-      <AnimatePresence>
-        {showModal && (
-          <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="card" 
-              style={{ width: '100%', maxWidth: '450px', backgroundColor: 'white' }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <h2 style={{ fontWeight: '800' }}>Create New Class</h2>
-                <button onClick={() => setShowModal(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X /></button>
-              </div>
-
-              <form onSubmit={handleCreateClass} style={{ display: 'grid', gap: '1.25rem' }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', fontWeight: '600' }}>Class Name</label>
-                  <input 
-                    required 
-                    placeholder="e.g. Grade 11-A"
-                    value={newClass.name} 
-                    onChange={e => setNewClass({...newClass, name: e.target.value})}
-                    style={{ width: '100%', padding: '0.8rem', borderRadius: '10px', border: '1px solid var(--border)', outline: 'none' }} 
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', fontWeight: '600' }}>Assigned Teacher</label>
-                  <input 
-                    required 
-                    placeholder="Teacher name"
-                    value={newClass.teacher} 
-                    onChange={e => setNewClass({...newClass, teacher: e.target.value})}
-                    style={{ width: '100%', padding: '0.8rem', borderRadius: '10px', border: '1px solid var(--border)', outline: 'none' }} 
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', fontWeight: '600' }}>Initial Student Count</label>
-                  <input 
-                    type="number" 
-                    value={newClass.students} 
-                    onChange={e => setNewClass({...newClass, students: parseInt(e.target.value)})}
-                    style={{ width: '100%', padding: '0.8rem', borderRadius: '10px', border: '1px solid var(--border)', outline: 'none' }} 
-                  />
-                </div>
-                <button type="submit" className="btn-primary" style={{ width: '100%', marginTop: '1rem' }}>Save Class Settings</button>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
+    <div className="animate-slide-up" style={{ minHeight: '100vh', paddingBottom: '2rem' }}>
+      {renderModal()}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: '700' }}>Class Management</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Manage your school classes and teacher assignments</p>
+          <h1 style={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: '900', letterSpacing: '-0.5px' }}>Classes</h1>
+          <p style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Academic structure & assignments</p>
         </div>
-        <button className="btn-primary" onClick={() => setShowModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Plus size={20} /> Create New Class
-        </button>
+        <button onClick={() => setShowModal(true)} style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Plus size={24} /></button>
       </div>
 
-      <div className="card">
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
-          <div style={{ position: 'relative', flex: 1 }}>
-            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--border)' }} />
-            <input 
-              type="text" 
-              placeholder="Search classes or teachers..." 
-              style={{ padding: '0.75rem 1rem 0.75rem 2.5rem', borderRadius: '12px', border: '1px solid var(--border)', outline: 'none', width: '100%' }}
-            />
-          </div>
-        </div>
+      <div style={{ position: 'relative', marginBottom: '2rem' }}>
+        <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+        <input type="text" placeholder="Search classes..." style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.8rem', borderRadius: '16px', border: '1px solid var(--border)', outline: 'none', background: 'white', fontWeight: '600' }} />
+      </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
-          {classes.map((cls) => (
-            <div key={cls.id} className="card" style={{ border: '1px solid var(--border)', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ 
-                position: 'absolute', 
-                top: 0, 
-                left: 0, 
-                width: '4px', 
-                height: '100%', 
-                backgroundColor: 'var(--primary)' 
-              }} />
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.25rem' }}>
+        {classes.map((cls) => (
+          <div key={cls.id} className="card animate-slide-up" style={{ border: 'none', background: 'white', borderRadius: '24px', overflow: 'hidden', position: 'relative' }}>
+            <div style={{ height: '6px', background: cls.color }} />
+            <div style={{ padding: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                 <div>
-                  <h3 style={{ fontWeight: '700', fontSize: '1.2rem' }}>{cls.name}</h3>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Teacher: {cls.teacher}</p>
+                  <h3 style={{ fontWeight: '900', fontSize: '1.2rem', color: 'var(--text-main)' }}>{cls.name}</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: '600' }}>Taught by {cls.teacher}</p>
                 </div>
-                <button style={{ color: 'var(--error)', background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => removeClass(cls.id)}><Trash2 size={18} /></button>
+                <button onClick={() => removeClass(cls.id)} style={{ color: 'var(--error)', background: '#fef2f2', border: 'none', padding: '0.5rem', borderRadius: '10px' }}><Trash2 size={18} /></button>
               </div>
 
-              <div style={{ marginTop: '1.5rem', display: 'flex', gap: '2rem' }}>
-                <div>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Students</p>
-                  <p style={{ fontWeight: '700', fontSize: '1.1rem' }}>{cls.students}</p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                <div style={{ background: 'var(--background)', padding: '0.75rem', borderRadius: '14px' }}>
+                  <p style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Students</p>
+                  <p style={{ fontSize: '1.1rem', fontWeight: '900' }}>{cls.students}</p>
                 </div>
-                <div>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Avg Attendance</p>
-                  <p style={{ fontWeight: '700', fontSize: '1.1rem', color: 'var(--success)' }}>{cls.attendance}</p>
+                <div style={{ background: 'var(--background)', padding: '0.75rem', borderRadius: '14px' }}>
+                  <p style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Attendance</p>
+                  <p style={{ fontSize: '1.1rem', fontWeight: '900', color: 'var(--success)' }}>{cls.attendance}</p>
                 </div>
               </div>
 
-              <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.5rem' }}>
-                <button style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border)', backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontSize: '0.85rem', fontWeight: '500' }}>
-                  <Edit2 size={14} /> Edit
-                </button>
-                <button style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border)', backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontSize: '0.85rem', fontWeight: '500' }}>
-                  <Users size={14} /> Students
-                </button>
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button style={{ flex: 1, height: '44px', borderRadius: '12px', background: 'var(--primary-light)', color: 'var(--primary)', fontWeight: '800', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}><Users size={16} /> Students</button>
+                <button style={{ flex: 1, height: '44px', borderRadius: '12px', background: 'var(--background)', color: 'var(--text-muted)', fontWeight: '800', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}><Edit2 size={16} /> Edit</button>
               </div>
             </div>
-          ))}
-          
-          <button 
-            onClick={() => setShowModal(true)}
-            style={{ 
-              border: '2px dashed var(--border)', 
-              borderRadius: 'var(--radius)', 
-              display: 'flex', 
-              flexDirection: 'column', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              gap: '1rem',
-              padding: '2rem',
-              backgroundColor: 'transparent',
-              color: 'var(--text-muted)',
-              cursor: 'pointer'
-            }}
-          >
-            <Plus size={32} />
-            <span style={{ fontWeight: '600' }}>Add New Class</span>
-          </button>
-        </div>
+          </div>
+        ))}
+        
+        <button onClick={() => setShowModal(true)} style={{ border: '2px dashed var(--border)', borderRadius: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '2rem', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', minHeight: '200px' }}>
+          <Plus size={32} />
+          <span style={{ fontWeight: '800', fontSize: '0.9rem' }}>Add New Class</span>
+        </button>
       </div>
     </div>
   );

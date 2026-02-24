@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
   Calendar, 
@@ -13,7 +13,8 @@ import {
   FileText,
   X,
   User,
-  Users
+  Users,
+  SlidersHorizontal
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -23,6 +24,14 @@ const AttendanceHistory = () => {
   const [selectedGrade, setSelectedGrade] = useState('All');
   const [selectedDivision, setSelectedDivision] = useState('All');
   const [viewingDetails, setViewingDetails] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [showFilters, setShowFilters] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Mock historical data
   const historyData = [
@@ -53,53 +62,48 @@ const AttendanceHistory = () => {
   const renderDetailsModal = () => (
     <AnimatePresence>
       {viewingDetails && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center', zIndex: 1100, backdropFilter: 'blur(4px)' }}>
           <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
+            initial={isMobile ? { y: 300 } : { opacity: 0, scale: 0.95 }}
+            animate={isMobile ? { y: 0 } : { opacity: 1, scale: 1 }}
+            exit={isMobile ? { y: 300 } : { opacity: 0, scale: 0.95 }}
             className="card" 
-            style={{ width: '100%', maxWidth: '600px', backgroundColor: 'white', position: 'relative', maxHeight: '90vh', overflowY: 'auto' }}
+            style={{ 
+              width: '100%', 
+              maxWidth: '600px', 
+              backgroundColor: 'white', 
+              position: 'relative', 
+              maxHeight: '90vh', 
+              overflowY: 'auto',
+              borderRadius: isMobile ? '32px 32px 0 0' : '24px',
+              padding: '2.5rem 1.5rem 1.5rem'
+            }}
           >
-            <button 
-              onClick={() => setViewingDetails(null)}
-              style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-            >
-              <X size={24} />
-            </button>
-            <h2 style={{ marginBottom: '0.5rem', fontWeight: '800' }}>Attendance Details</h2>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Grade {viewingDetails.grade}-{viewingDetails.division} • {viewingDetails.displayDate}</p>
+            {isMobile && <div style={{ width: '40px', height: '4px', backgroundColor: 'var(--border)', borderRadius: '2px', margin: '-1rem auto 1.5rem' }} />}
+            <button onClick={() => setViewingDetails(null)} style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', background: 'var(--background)', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', borderRadius: '50%', padding: '0.4rem' }}><X size={20} /></button>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '900', marginBottom: '0.25rem' }}>Log Details</h2>
+            <p style={{ color: 'var(--text-muted)', fontWeight: '600', marginBottom: '2rem' }}>Grade {viewingDetails.grade}-{viewingDetails.division} • {viewingDetails.displayDate}</p>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
-              <div className="card" style={{ border: '1px solid var(--border)', background: 'var(--background)' }}>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Present</p>
-                <p style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--success)' }}>{viewingDetails.present}</p>
+              <div className="card" style={{ border: 'none', background: '#ecfdf5', padding: '1.25rem' }}>
+                <p style={{ fontSize: '0.75rem', fontWeight: '700', color: '#059669', textTransform: 'uppercase' }}>Present</p>
+                <p style={{ fontSize: '1.5rem', fontWeight: '900', color: '#059669' }}>{viewingDetails.present}</p>
               </div>
-              <div className="card" style={{ border: '1px solid var(--border)', background: 'var(--background)' }}>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Absent</p>
-                <p style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--error)' }}>{viewingDetails.absent}</p>
+              <div className="card" style={{ border: 'none', background: '#fef2f2', padding: '1.25rem' }}>
+                <p style={{ fontSize: '0.75rem', fontWeight: '700', color: '#dc2626', textTransform: 'uppercase' }}>Absent</p>
+                <p style={{ fontSize: '1.5rem', fontWeight: '900', color: '#dc2626' }}>{viewingDetails.absent}</p>
               </div>
             </div>
 
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1rem' }}>Absent Students List</h3>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '1rem' }}>Absentees List</h3>
             <div style={{ display: 'grid', gap: '0.75rem' }}>
               {[...Array(viewingDetails.absent)].map((_, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', border: '1px solid var(--border)', borderRadius: '10px' }}>
-                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--error)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <User size={16} />
-                  </div>
-                  <span style={{ fontWeight: '600' }}>Absent Student Name #{i + 1}</span>
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', border: '1px solid var(--border)', borderRadius: '14px' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#fef2f2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><User size={18} /></div>
+                  <span style={{ fontWeight: '700', fontSize: '0.95rem' }}>Student Name #{i + 1}</span>
                 </div>
               ))}
             </div>
-            
-            <button 
-              className="btn-primary" 
-              style={{ width: '100%', marginTop: '2rem' }}
-              onClick={() => setViewingDetails(null)}
-            >
-              Close Details
-            </button>
           </motion.div>
         </div>
       )}
@@ -107,197 +111,83 @@ const AttendanceHistory = () => {
   );
 
   const renderAdminHistory = () => (
-    <div className="animate-fade-in">
-      {/* Filters */}
-      <div className="card" style={{ marginBottom: '2rem', display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'flex-end', backgroundColor: 'white' }}>
-        <div style={{ flex: 1, minWidth: '200px' }}>
-          <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.5rem' }}>Search by Date</label>
-          <input 
-            type="date" 
-            value={selectedDate} 
-            onChange={(e) => setSelectedDate(e.target.value)}
-            style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', border: '1px solid var(--border)', outline: 'none' }} 
-          />
+    <div className="animate-slide-up">
+      {/* Search and Filter Trigger for Mobile */}
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>
+        <div style={{ position: 'relative', flex: 1 }}>
+          <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+          <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} style={{ width: '100%', padding: '0.75rem 0.75rem 0.75rem 2.5rem', borderRadius: '14px', border: '1px solid var(--border)', outline: 'none', fontWeight: '600' }} />
         </div>
-        <div style={{ flex: 1, minWidth: '150px' }}>
-          <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.5rem' }}>Grade</label>
-          <select 
-            value={selectedGrade} 
-            onChange={(e) => setSelectedGrade(e.target.value)}
-            style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', border: '1px solid var(--border)', outline: 'none' }}
-          >
-            <option value="All">All Grades</option>
-            <option value="9">Grade 9</option>
-            <option value="10">Grade 10</option>
-          </select>
-        </div>
-        <div style={{ flex: 1, minWidth: '150px' }}>
-          <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.5rem' }}>Division</label>
-          <select 
-            value={selectedDivision} 
-            onChange={(e) => setSelectedDivision(e.target.value)}
-            style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', border: '1px solid var(--border)', outline: 'none' }}
-          >
-            <option value="All">All Divisions</option>
-            <option value="A">Division A</option>
-            <option value="B">Division B</option>
-            <option value="C">Division C</option>
-          </select>
-        </div>
-        <button 
-          className="btn-primary" 
-          onClick={() => { setSelectedDate(''); setSelectedGrade('All'); setSelectedDivision('All'); }}
-          style={{ height: '48px', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--text-muted)' }}
-        >
-          Reset
-        </button>
+        <button onClick={() => setShowFilters(!showFilters)} style={{ width: '48px', height: '48px', borderRadius: '14px', background: showFilters ? 'var(--primary)' : 'white', color: showFilters ? 'white' : 'var(--text-muted)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><SlidersHorizontal size={20} /></button>
       </div>
 
-      <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h3 style={{ fontWeight: '700' }}>Recent Attendance Logs</h3>
-          <button style={{ backgroundColor: 'var(--primary-light)', color: 'var(--primary)', padding: '0.6rem 1.2rem', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600', fontSize: '0.9rem' }}>
-            <Download size={18} /> Export Results
-          </button>
-        </div>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ textAlign: 'left', borderBottom: '2px solid var(--background)' }}>
-                <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Date</th>
-                <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Class</th>
-                <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Teacher</th>
-                <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Stats</th>
-                <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Rate</th>
-                <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredHistory.length > 0 ? filteredHistory.map((log) => (
-                <tr key={log.id} style={{ borderBottom: '1px solid var(--background)' }}>
-                  <td style={{ padding: '1rem', fontWeight: '600' }}>{log.displayDate}</td>
-                  <td style={{ padding: '1rem' }}>Grade {log.grade}-{log.division}</td>
-                  <td style={{ padding: '1rem' }}>{log.teacher}</td>
-                  <td style={{ padding: '1rem' }}>
-                    <span style={{ color: 'var(--success)', fontWeight: '600' }}>{log.present}P</span> / 
-                    <span style={{ color: 'var(--error)', fontWeight: '600', marginLeft: '4px' }}>{log.absent}A</span>
-                  </td>
-                  <td style={{ padding: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div style={{ width: '80px', height: '6px', backgroundColor: 'var(--border)', borderRadius: '3px', position: 'relative' }}>
-                        <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', backgroundColor: 'var(--success)', width: `${(log.present/log.total)*100}%`, borderRadius: '3px' }} />
-                      </div>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{Math.round((log.present/log.total)*100)}%</span>
-                    </div>
-                  </td>
-                  <td style={{ padding: '1rem' }}>
-                    <button 
-                      onClick={() => setViewingDetails(log)}
-                      style={{ color: 'var(--primary)', fontWeight: '700', fontSize: '0.85rem', background: 'none', border: 'none', cursor: 'pointer' }}
-                    >
-                      View Details
-                    </button>
-                  </td>
-                </tr>
-              )) : (
-                <tr>
-                  <td colSpan="6" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>No logs found for selected criteria.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
+      <AnimatePresence>
+        {(showFilters || !isMobile) && (
+          <motion.div initial={isMobile ? { height: 0, opacity: 0 } : {}} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="card" style={{ marginBottom: '2rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', overflow: 'hidden' }}>
+            <div style={{ flex: 1, minWidth: '150px' }}>
+              <label style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'block' }}>GRADE</label>
+              <select value={selectedGrade} onChange={(e) => setSelectedGrade(e.target.value)} style={{ width: '100%', padding: '0.7rem', borderRadius: '12px', border: '1px solid var(--border)', outline: 'none', fontWeight: '600' }}>
+                <option value="All">All Grades</option><option value="9">Grade 9</option><option value="10">Grade 10</option>
+              </select>
+            </div>
+            <div style={{ flex: 1, minWidth: '150px' }}>
+              <label style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'block' }}>DIVISION</label>
+              <select value={selectedDivision} onChange={(e) => setSelectedDivision(e.target.value)} style={{ width: '100%', padding: '0.7rem', borderRadius: '12px', border: '1px solid var(--border)', outline: 'none', fontWeight: '600' }}>
+                <option value="All">All Divisions</option><option value="A">Division A</option><option value="B">Division B</option>
+              </select>
+            </div>
+            <button onClick={() => { setSelectedDate(''); setSelectedGrade('All'); setSelectedDivision('All'); }} style={{ padding: '0.7rem 1.5rem', borderRadius: '12px', background: 'var(--background)', fontWeight: '700', color: 'var(--text-muted)', alignSelf: 'flex-end' }}>Reset</button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-  const renderTeacherHistory = () => (
-    <div className="animate-fade-in">
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '2rem' }}>
-        <div className="card" style={{ height: 'fit-content' }}>
-          <h4 style={{ mb: '1rem', fontWeight: '700' }}>Quick Select Date</h4>
-          <input 
-            type="date" 
-            value={selectedDate} 
-            onChange={(e) => setSelectedDate(e.target.value)}
-            style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', border: '1px solid var(--border)', outline: 'none', marginBottom: '1rem' }} 
-          />
-          <div style={{ display: 'grid', gap: '0.5rem' }}>
-            <div className="card" style={{ border: '1px solid var(--border)', background: 'var(--primary-light)' }}>
-              <p style={{ color: 'var(--primary)', fontSize: '0.75rem', fontWeight: '700' }}>AVERAGE PRESENCE</p>
-              <p style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--primary)' }}>92%</p>
+      <div style={{ display: 'grid', gap: '1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+          <h3 style={{ fontWeight: '800', fontSize: '1.1rem' }}>Historical Records</h3>
+          <button style={{ color: 'var(--primary)', fontSize: '0.85rem', fontWeight: '700' }}>Download All</button>
+        </div>
+        {filteredHistory.map((log) => (
+          <div key={log.id} onClick={() => setViewingDetails(log)} className="card animate-slide-up" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem' }}>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'var(--primary-light)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '0.75rem', flexShrink: 0 }}>
+                {log.grade}-{log.division}
+              </div>
+              <div>
+                <p style={{ fontWeight: '800', fontSize: '1rem' }}>{log.displayDate}</p>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>{log.teacher}</p>
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ fontWeight: '800', color: 'var(--success)', fontSize: '1rem' }}>{Math.round((log.present/log.total)*100)}%</p>
+              <p style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)' }}>{log.present} / {log.total}</p>
             </div>
           </div>
-        </div>
-
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: '1.5rem' }}>
-            <h3 style={{ fontWeight: '700' }}>Session Logs: Grade 9-A</h3>
-          </div>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border)' }}>
-                  <th style={{ padding: '1rem' }}>Date</th>
-                  <th style={{ padding: '1rem' }}>Present</th>
-                  <th style={{ padding: '1rem' }}>Absent</th>
-                  <th style={{ padding: '1rem' }}>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredHistory.map(log => (
-                  <tr key={log.id} style={{ borderBottom: '1px solid var(--background)' }}>
-                    <td style={{ padding: '1rem' }}>{log.displayDate}</td>
-                    <td style={{ padding: '1rem', color: 'var(--success)', fontWeight: '600' }}>{log.present}</td>
-                    <td style={{ padding: '1rem', color: 'var(--error)', fontWeight: '600' }}>{log.absent}</td>
-                    <td style={{ padding: '1rem' }}>
-                      <button 
-                        onClick={() => setViewingDetails(log)}
-                        style={{ color: 'var(--primary)', fontWeight: '600', fontSize: '0.85rem', background: 'none', border: 'none', cursor: 'pointer' }}
-                      >
-                        View Details
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );
 
   const renderStudentHistory = () => (
-    <div className="animate-fade-in">
-      <div className="card" style={{ mb: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ fontWeight: '700' }}>Attendance Calendar</h3>
-        <input 
-          type="month" 
-          defaultValue="2024-02"
-          style={{ padding: '0.6rem 1rem', borderRadius: '10px', border: '1px solid var(--border)' }} 
-        />
+    <div className="animate-slide-up">
+      <div className="card" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: 'none', background: 'white' }}>
+        <h3 style={{ fontWeight: '900', fontSize: '1.2rem' }}>Attendance Journal</h3>
+        <select style={{ padding: '0.5rem 1rem', borderRadius: '12px', border: 'none', background: 'var(--background)', fontWeight: '700', fontSize: '0.85rem' }}>
+          <option>February 2024</option><option>January 2024</option>
+        </select>
       </div>
-      <div style={{ display: 'grid', gap: '1rem' }}>
+      <div style={{ display: 'grid', gap: '0.75rem' }}>
         {studentHistory.map((item, idx) => (
-          <div key={idx} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-              <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: item.status === 'present' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: item.status === 'present' ? 'var(--success)' : 'var(--error)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div key={idx} className="card animate-slide-up" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: 'none', background: 'white' }}>
+            <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '16px', backgroundColor: item.status === 'present' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: item.status === 'present' ? 'var(--success)' : 'var(--error)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {item.status === 'present' ? <CheckCircle2 size={24} /> : <XCircle size={24} />}
               </div>
               <div>
-                <p style={{ fontWeight: '700', fontSize: '1.1rem' }}>{item.date}</p>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{item.subject} • {item.checkIn}</p>
+                <p style={{ fontWeight: '800', fontSize: '1.05rem' }}>{item.date}</p>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>{item.subject} • {item.checkIn}</p>
               </div>
             </div>
-            <span style={{ 
-              padding: '0.4rem 1rem', 
-              borderRadius: '20px', 
-              backgroundColor: item.status === 'present' ? 'var(--primary-light)' : 'rgba(239, 68, 68, 0.1)', 
-              color: item.status === 'present' ? 'var(--primary)' : 'var(--error)',
-              fontWeight: '700',
-              fontSize: '0.75rem'
-            }}>{item.status.toUpperCase()}</span>
+            <span style={{ padding: '0.4rem 0.75rem', borderRadius: '10px', backgroundColor: item.status === 'present' ? 'var(--primary-light)' : 'rgba(239, 68, 68, 0.1)', color: item.status === 'present' ? 'var(--primary)' : 'var(--error)', fontWeight: '800', fontSize: '0.7rem' }}>{item.status.toUpperCase()}</span>
           </div>
         ))}
       </div>
@@ -305,23 +195,13 @@ const AttendanceHistory = () => {
   );
 
   return (
-    <div className="animate-fade-in" style={{ position: 'relative' }}>
+    <div className="animate-slide-up" style={{ minHeight: '100vh', paddingBottom: '2rem' }}>
       {renderDetailsModal()}
-      
-      <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: '700' }}>Attendance History</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Analyze patterns and download records</p>
-        </div>
-        {(user.role === 'admin' || user.role === 'headmaster') && (
-          <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FileText size={18} /> Export Analytics
-          </button>
-        )}
+      <div style={{ marginBottom: '2rem' }}>
+        <h1 style={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: '900', letterSpacing: '-0.5px' }}>Attendance History</h1>
+        <p style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Records & Performance Analytics</p>
       </div>
-
-      {user.role === 'admin' || user.role === 'headmaster' ? renderAdminHistory() : 
-       user.role === 'teacher' ? renderTeacherHistory() : renderStudentHistory()}
+      {user.role === 'admin' || user.role === 'headmaster' ? renderAdminHistory() : renderStudentHistory()}
     </div>
   );
 };
