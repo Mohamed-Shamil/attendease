@@ -24,6 +24,7 @@ const Layout = ({ children }) => {
   const { user, logout } = useAuth();
   const [isSidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 1024);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -91,7 +92,8 @@ const Layout = ({ children }) => {
                 zIndex: 110,
                 display: 'flex',
                 flexDirection: 'column',
-                overflow: 'hidden'
+                overflowY: 'auto',
+                overflowX: 'hidden'
               }}
             >
               <div style={{ padding: '2rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -205,12 +207,47 @@ const Layout = ({ children }) => {
                 <p style={{ fontWeight: '700', fontSize: '0.9rem', color: 'var(--text-main)', marginBottom: '-2px' }}>{user.name}</p>
                 <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>{user.role}</p>
               </div>
-              <div 
-                onClick={() => navigate('/settings')}
-                style={{ width: '40px', height: '40px', borderRadius: '12px', overflow: 'hidden', backgroundColor: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', cursor: 'pointer' }}
-              >
-                <User size={22} />
-              </div>
+                <div 
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  style={{ width: '40px', height: '40px', borderRadius: '120px', overflow: 'hidden', backgroundColor: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', cursor: 'pointer', position: 'relative' }}
+                >
+                  <User size={22} />
+                  
+                  <AnimatePresence>
+                    {showUserMenu && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        style={{
+                          position: 'absolute',
+                          top: '120%',
+                          right: 0,
+                          width: '180px',
+                          backgroundColor: 'white',
+                          borderRadius: '16px',
+                          boxShadow: 'var(--shadow-lg)',
+                          border: '1px solid var(--border)',
+                          padding: '0.5rem',
+                          zIndex: 200
+                        }}
+                      >
+                        <button 
+                          onClick={() => { navigate('/settings'); setShowUserMenu(false); }}
+                          style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--text-main)', fontSize: '0.9rem', fontWeight: '600' }}
+                        >
+                          <SettingsIcon size={16} /> Settings
+                        </button>
+                        <button 
+                          onClick={logout}
+                          style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--error)', fontSize: '0.9rem', fontWeight: '700', borderTop: '1px solid var(--border)', marginTop: '0.25rem' }}
+                        >
+                          <LogOut size={16} /> Sign Out
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
             </div>
           </div>
         </header>
