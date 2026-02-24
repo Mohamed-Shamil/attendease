@@ -92,67 +92,102 @@ const Layout = ({ children }) => {
                 zIndex: 2000, /* Higher than bottom-nav */
                 display: 'flex',
                 flexDirection: 'column',
-                overflowY: 'auto',
-                overflowX: 'hidden',
-                paddingBottom: isMobile ? '80px' : '0' /* Extra space to ensure visibility above bottom nav or for scrolling */
+                overflow: 'hidden'
               }}
             >
-              <div style={{ padding: '2rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div className="gradient-blue" style={{ width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-                    <CalendarCheck size={20} />
+                  <div className="gradient-blue" style={{ width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                    <CalendarCheck size={18} />
                   </div>
-                  <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--primary)', letterSpacing: '-0.5px' }}>AttendEase</h2>
+                  <h2 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--primary)', letterSpacing: '-0.5px' }}>AttendEase</h2>
                 </div>
-                {isMobile && <button onClick={() => setSidebarOpen(false)} style={{ color: 'var(--text-muted)' }}><X size={20}/></button>}
+                {isMobile && <button onClick={() => setSidebarOpen(false)} style={{ color: 'var(--text-muted)', background: 'none' }}><X size={20}/></button>}
               </div>
 
-              <nav style={{ flex: 1, padding: '0.5rem 1rem' }}>
-                {filteredMenu.map((item) => {
-                  const isActive = location.pathname === item.path;
-                  return (
-                    <button
-                      key={item.path}
-                      onClick={() => { navigate(item.path); if(isMobile) setSidebarOpen(false); }}
-                      style={{
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '1rem',
-                        padding: '0.85rem 1.25rem',
-                        borderRadius: '12px',
-                        backgroundColor: isActive ? 'var(--primary-light)' : 'transparent',
-                        color: isActive ? 'var(--primary)' : 'var(--text-muted)',
-                        marginBottom: '0.4rem',
-                        fontWeight: isActive ? '700' : '500',
-                        textAlign: 'left',
-                        fontSize: '0.95rem'
-                      }}
-                    >
-                      <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
-                      <span>{item.title}</span>
-                    </button>
-                  );
-                })}
-              </nav>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem 1rem' }}>
+                <nav>
+                  {filteredMenu.map((item) => {
+                    const isActive = location.pathname === item.path;
+                    return (
+                      <button
+                        key={item.path}
+                        onClick={() => { navigate(item.path); if(isMobile) setSidebarOpen(false); }}
+                        style={{
+                          width: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '1rem',
+                          padding: '0.75rem 1rem',
+                          borderRadius: '12px',
+                          backgroundColor: isActive ? 'var(--primary-light)' : 'transparent',
+                          color: isActive ? 'var(--primary)' : 'var(--text-muted)',
+                          marginBottom: '0.25rem',
+                          fontWeight: isActive ? '700' : '500',
+                          textAlign: 'left',
+                          fontSize: '0.9rem',
+                          background: isActive ? 'var(--primary-light)' : 'none'
+                        }}
+                      >
+                        <item.icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                        <span>{item.title}</span>
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
 
-              <div style={{ padding: '1.25rem', borderTop: '1px solid var(--border)' }}>
-                <button
-                  onClick={logout}
-                  style={{
-                    width: '100%',
+              {/* Sidebar Profile Footer */}
+              <div style={{ 
+                padding: '1rem', 
+                borderTop: '1px solid var(--border)', 
+                backgroundColor: '#f8fafc',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                marginBottom: isMobile ? '70px' : '0' /* Ensure space for bottom nav icons on mobile */
+              }}>
+                <div style={{ 
+                  width: '40px', 
+                  height: '40px', 
+                  borderRadius: '12px', 
+                  backgroundColor: 'white', 
+                  border: '1px solid var(--border)',
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  color: 'var(--primary)',
+                  boxShadow: 'var(--shadow-sm)'
+                }}>
+                  <User size={20} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontWeight: '700', fontSize: '0.85rem', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: '1px' }}>
+                    {user.name}
+                  </p>
+                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.3px' }}>
+                    {user.role}
+                  </p>
+                </div>
+                <button 
+                  onClick={logout} 
+                  title="Sign Out"
+                  style={{ 
+                    color: 'var(--error)', 
+                    padding: '0.6rem', 
+                    borderRadius: '10px',
+                    backgroundColor: 'white',
+                    border: '1px solid var(--border)',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '1rem',
-                    padding: '0.85rem 1.25rem',
-                    borderRadius: '12px',
-                    color: 'var(--error)',
-                    fontWeight: '700',
-                    fontSize: '0.95rem'
+                    justifyContent: 'center',
+                    boxShadow: 'var(--shadow-sm)',
+                    transition: 'all 0.2s ease'
                   }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}
                 >
-                  <LogOut size={20} />
-                  <span>Sign Out</span>
+                  <LogOut size={18} />
                 </button>
               </div>
             </motion.aside>
