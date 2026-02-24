@@ -21,19 +21,11 @@ const Login = () => {
   ];
 
   return (
-    <div className="login-page" style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
-      padding: '2rem'
-    }}>
+    <div className="login-page">
       <motion.div 
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="card" 
-        style={{ width: '100%', maxWidth: '500px', padding: '3rem', textAlign: 'center' }}
+        className="login-card"
       >
         <div style={{ marginBottom: '2.5rem' }}>
           <div className="gradient-blue" style={{
@@ -54,27 +46,16 @@ const Login = () => {
           <p style={{ color: 'var(--text-muted)' }}>Select your role to continue to the portal</p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <div className="role-grid">
           {roles.map((role) => (
             <motion.button
               key={role.id}
               whileHover={{ scale: 1.03, translateY: -4 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => handleLogin(role.id)}
-              style={{
-                background: 'white',
-                border: '1px solid var(--border)',
-                borderRadius: '16px',
-                padding: '1.5rem',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '1rem',
-                boxShadow: 'var(--shadow-sm)',
-                transition: 'all 0.3s ease'
-              }}
+              className="role-button"
             >
-              <div style={{ color: role.color }}>
+              <div style={{ color: role.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <role.icon size={32} />
               </div>
               <span style={{ fontWeight: '600', fontSize: '0.9rem', color: 'var(--text-main)' }}>

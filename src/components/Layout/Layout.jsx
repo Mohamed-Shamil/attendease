@@ -89,11 +89,12 @@ const Layout = ({ children }) => {
                 bottom: 0,
                 left: 0,
                 width: 280,
-                zIndex: 110,
+                zIndex: 2000, /* Higher than bottom-nav */
                 display: 'flex',
                 flexDirection: 'column',
                 overflowY: 'auto',
-                overflowX: 'hidden'
+                overflowX: 'hidden',
+                paddingBottom: isMobile ? '80px' : '0' /* Extra space to ensure visibility above bottom nav or for scrolling */
               }}
             >
               <div style={{ padding: '2rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -233,14 +234,14 @@ const Layout = ({ children }) => {
                         }}
                       >
                         <button 
-                          onClick={() => { navigate('/settings'); setShowUserMenu(false); }}
-                          style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--text-main)', fontSize: '0.9rem', fontWeight: '600' }}
+                          onClick={(e) => { e.stopPropagation(); navigate('/settings'); setShowUserMenu(false); }}
+                          style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--text-main)', fontSize: '0.9rem', fontWeight: '600', background: 'none' }}
                         >
                           <SettingsIcon size={16} /> Settings
                         </button>
                         <button 
-                          onClick={logout}
-                          style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--error)', fontSize: '0.9rem', fontWeight: '700', borderTop: '1px solid var(--border)', marginTop: '0.25rem' }}
+                          onClick={(e) => { e.stopPropagation(); logout(); }}
+                          style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--error)', fontSize: '0.9rem', fontWeight: '700', borderTop: '1px solid var(--border)', marginTop: '0.25rem', background: 'none' }}
                         >
                           <LogOut size={16} /> Sign Out
                         </button>
